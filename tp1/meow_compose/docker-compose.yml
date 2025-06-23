@@ -1,0 +1,26 @@
+version: "3"
+
+services:
+  meow_compose:
+    image: meow-compose
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: meow_compose
+    ports:
+      - "${LISTEN_PORT}:${LISTEN_PORT}"
+    environment:
+      - LISTEN_PORT=${LISTEN_PORT}
+      - DB_HOSTNAME=${DB_HOSTNAME}
+  mysql_compose:
+    image: mysql
+    container_name: meow_sql
+    ports:
+      - "9000:9000"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=meow
+      - MYSQL_USER=meow
+      - MYSQL_PASSWORD=meow
+    volumes:
+      - ./seed.sql:/docker-entrypoint-initdb.d/seed.sql
