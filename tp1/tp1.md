@@ -408,8 +408,171 @@ $ vite
 - [URL Dockerhub de l'image](https://hub.docker.com/r/teo1403/small-front)
 - Profit $$$
 
+## Part III : Compose
 
+### Getting Started
 
+#### 1. Run it
+
+- Créez un fichier [`docker-compose.yml`](./compose_test/docker-compose.yml)
+- Lancez les deux conteneurs avec `docker compose`
+```
+docker compose up -d
+WARN[0000] /Users/teo.ladouche/School/docker-avance/docker-avance/tp1/compose_test/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+[+] Running 2/2
+ ✔ conteneur_nul Pulled                                                                                                                                                               2.4s
+ ✔ conteneur_flopesque Pulled                                                                                                                                                         2.4s
+[+] Running 3/3
+ ✔ Network compose_test_default                  Created                                                                                                                              0.0s
+ ✔ Container compose_test-conteneur_flopesque-1  Started                                                                                                                              0.2s
+ ✔ Container compose_test-conteneur_nul-1        Started
+```
+- Vérifie que les deux conteneurs tournent
+```
+docker compose ps
+WARN[0000] /Users/teo.ladouche/School/docker-avance/docker-avance/tp1/compose_test/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+NAME                                 IMAGE     COMMAND        SERVICE               CREATED              STATUS              PORTS
+compose_test-conteneur_flopesque-1   debian    "sleep 9999"   conteneur_flopesque   About a minute ago   Up About a minute
+compose_test-conteneur_nul-1         debian    "sleep 9999"   conteneur_nul         About a minute ago   Up About a minute
+```
+
+#### 2. What about networking
+
+- Pop un shell dans le conteneur `conteneur_nul`
+```
+docker exec -it compose_test-conteneur_nul-1 bash
+root@4d73da2cfb6c:/#
+```
+
+- Installation de `ping`
+```
+docker exec -it compose_test-conteneur_nul-1 bash
+root@4d73da2cfb6c:/# apt-get update -y
+Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [48.0 kB]
+Get:4 http://deb.debian.org/debian bookworm/main arm64 Packages [8693 kB]
+Get:5 http://deb.debian.org/debian bookworm-updates/main arm64 Packages [756 B]
+Get:6 http://deb.debian.org/debian-security bookworm-security/main arm64 Packages [264 kB]
+Fetched 9213 kB in 1s (8347 kB/s)
+Reading package lists... Done
+root@4d73da2cfb6c:/# apt-get install -y iputils-ping
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following additional packages will be installed:
+  libcap2-bin libpam-cap
+The following NEW packages will be installed:
+  iputils-ping libcap2-bin libpam-cap
+0 upgraded, 3 newly installed, 0 to remove and 0 not upgraded.
+Need to get 94.9 kB of archives.
+After this operation, 598 kB of additional disk space will be used.
+Get:1 http://deb.debian.org/debian bookworm/main arm64 libcap2-bin arm64 1:2.66-4+deb12u1 [34.1 kB]
+Get:2 http://deb.debian.org/debian bookworm/main arm64 iputils-ping arm64 3:20221126-1+deb12u1 [46.1 kB]
+Get:3 http://deb.debian.org/debian bookworm/main arm64 libpam-cap arm64 1:2.66-4+deb12u1 [14.7 kB]
+Fetched 94.9 kB in 0s (345 kB/s)
+debconf: delaying package configuration, since apt-utils is not installed
+Selecting previously unselected package libcap2-bin.
+(Reading database ... 6083 files and directories currently installed.)
+Preparing to unpack .../libcap2-bin_1%3a2.66-4+deb12u1_arm64.deb ...
+Unpacking libcap2-bin (1:2.66-4+deb12u1) ...
+Selecting previously unselected package iputils-ping.
+Preparing to unpack .../iputils-ping_3%3a20221126-1+deb12u1_arm64.deb ...
+Unpacking iputils-ping (3:20221126-1+deb12u1) ...
+Selecting previously unselected package libpam-cap:arm64.
+Preparing to unpack .../libpam-cap_1%3a2.66-4+deb12u1_arm64.deb ...
+Unpacking libpam-cap:arm64 (1:2.66-4+deb12u1) ...
+Setting up libcap2-bin (1:2.66-4+deb12u1) ...
+Setting up libpam-cap:arm64 (1:2.66-4+deb12u1) ...
+debconf: unable to initialize frontend: Dialog
+debconf: (No usable dialog-like program is installed, so the dialog based frontend cannot be used. at /usr/share/perl5/Debconf/FrontEnd/Dialog.pm line 78.)
+debconf: falling back to frontend: Readline
+debconf: unable to initialize frontend: Readline
+debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC contains: /etc/perl /usr/local/lib/aarch64-linux-gnu/perl/5.36.0 /usr/local/share/perl/5.36.0 /usr/lib/aarch64-linux-gnu/perl5/5.36 /usr/share/perl5 /usr/lib/aarch64-linux-gnu/perl-base /usr/lib/aarch64-linux-gnu/perl/5.36 /usr/share/perl/5.36 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 7.)
+debconf: falling back to frontend: Teletype
+Setting up iputils-ping (3:20221126-1+deb12u1) ...
+```
+- Ping `conteneur_flopesque`
+```
+root@4d73da2cfb6c:/# ping conteneur_flopesque
+PING conteneur_flopesque (172.18.0.3) 56(84) bytes of data.
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=1 ttl=64 time=0.333 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=2 ttl=64 time=0.163 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=3 ttl=64 time=0.157 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=4 ttl=64 time=0.152 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=5 ttl=64 time=0.151 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=6 ttl=64 time=0.155 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=7 ttl=64 time=0.158 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=8 ttl=64 time=0.161 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=9 ttl=64 time=0.155 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=10 ttl=64 time=0.158 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=11 ttl=64 time=0.165 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=12 ttl=64 time=0.150 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=13 ttl=64 time=0.162 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=14 ttl=64 time=0.165 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=15 ttl=64 time=0.275 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=16 ttl=64 time=0.165 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=17 ttl=64 time=0.262 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=18 ttl=64 time=0.288 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=19 ttl=64 time=0.160 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=20 ttl=64 time=0.250 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=21 ttl=64 time=0.149 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=22 ttl=64 time=0.161 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=23 ttl=64 time=0.083 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=24 ttl=64 time=0.147 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=25 ttl=64 time=0.145 ms
+64 bytes from compose_test-conteneur_flopesque-1.compose_test_default (172.18.0.3): icmp_seq=26 ttl=64 time=0.179 ms
+```
+
+6. Rendu attendu
+
+- [`docker-compose.yml`](./meow_compose/docker-compose.yml)
+- [`seed.sql`](./meow_compose/seed.sql)
+- [`.env`](./meow_compose/.env)
+- [`Dockerfile`](./meow_compose/Dockerfile)
+- Un `docker compose up` qui fonctionne
+```
+docker compose up --build -d
+WARN[0000] /Users/teo.ladouche/School/docker-avance/docker-avance/tp1/meow_compose/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+[+] Running 0/0
+ ⠋ Service meow_compose  Building                                                                                                                                                     0.1s
+[+] Building 0.7s (11/11) FINISHED                                                                                                                                    docker:desktop-linux
+ => [meow_compose internal] load build definition from Dockerfile                                                                                                                     0.0s
+ => => transferring dockerfile: 559B                                                                                                                                                  0.0s
+ => [meow_compose internal] load metadata for docker.io/library/python:3                                                                                                              0.5s
+ => [meow_compose internal] load .dockerignore                                                                                                                                        0.0s
+ => => transferring context: 2B                                                                                                                                                       0.0s
+ => [meow_compose 1/5] FROM docker.io/library/python:3@sha256:5f69d22a88dd4cc4ee1576def19aef48c8faa1b566054c44291183831cbad13b                                                        0.0s
+ => => resolve docker.io/library/python:3@sha256:5f69d22a88dd4cc4ee1576def19aef48c8faa1b566054c44291183831cbad13b                                                                     0.0s
+ => [meow_compose internal] load build context                                                                                                                                        0.0s
+ => => transferring context: 63B                                                                                                                                                      0.0s
+ => CACHED [meow_compose 2/5] WORKDIR /app                                                                                                                                            0.0s
+ => CACHED [meow_compose 3/5] COPY ./requirements.txt .                                                                                                                               0.0s
+ => CACHED [meow_compose 4/5] RUN pip install --no-cache-dir -r requirements.txt                                                                                                      0.0s
+ => CACHED [meow_compose 5/5] COPY ./app.py .                                                                                                                                         0.0s
+ => [meow_compose] exporting to image                                                                                                                                                 0.0s
+ => => exporting layers                                                                                                                                                               0.0s
+ => => exporting manifest sha256:b275a1a41a17ffc1b6fada242a944f7b8b676ba14784940fe889506d14db557c                                                                                     0.0s
+ => => exporting config sha256:6ced8159b64097c539ff14beacf519cbd2fe88fcaeba58c7a0358ed96c02da82                                                                                       0.0s
+ => => exporting attestation manifest sha256:10dcae34c83ca181cb060be7350dfa5e743fd79b850c9807d7ec7d5508c60fb2                                                                         0.0s
+ => => exporting manifest list sha256:4447b5797d3b4d98d878d6660a0e36063d9417a4e409301703a0b0a5721cee5e                                                                                0.0s
+ => => naming to docker.io/library/meow-compose:latest                                                                                                                                0.0s
+[+] Running 4/4g to docker.io/library/meow-compose:latest                                                                                                                             0.0s
+ ✔ Service meow_compose          Built                                                                                                                                                0.8s
+ ✔ Network meow_compose_default  Created                                                                                                                                              0.0s
+ ✔ Container meow_sql            Started                                                                                                                                              0.2s
+ ✔ Container meow_compose        Started
+```
+- curl sur la route `/users`
+```
+curl http://127.0.0.1:6942/users
+[{"favorite_insult":"You are the human equivalent of Internet Explorer 6.","id":1,"name":"Lucas Dubois"},{"favorite_insult":"Your code looks like it was written by a pigeon.","id":2,"name":"Chloe Martin"},{"favorite_insult":"Your logic has more holes than a phishing email.","id":3,"name":"Leo Bernard"},{"favorite_insult":"You must be a deprecated function, because you have no support.","id":4,"name":"Manon Petit"},{"favorite_insult":"Your CSS is just a series of !important tags.","id":5,"name":"Hugo Durand"}]
+```
+- curl sur la route `/user/3`
+```
+curl http://127.0.0.1:6942/user/3
+{"favorite_insult":"Your logic has more holes than a phishing email.","id":3,"name":"Leo Bernard"}
+```
 ## Annexe
 
 ###### La commande `docker inspect 66fc6b8bd9cd` et son output
